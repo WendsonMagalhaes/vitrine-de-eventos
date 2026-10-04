@@ -1,0 +1,42 @@
+"use client";
+import Link from "next/link";
+import { ChevronRight, CircleUserRound, LogOut } from "lucide-react";
+import { useSession } from "@/lib/clientSession";
+import { InstallBanner } from "@/lib/pwa";
+import { useRouter } from "next/navigation";
+
+// Perfil do cliente (ou visitante). Fornecedor e administrador são levados aos próprios painéis.
+export default function Perfil() {
+  const { user, signOut } = useSession();
+  const router = useRouter();
+  return (
+    <>
+      <h1 className="v-h1">Perfil</h1>
+      {user ? (
+        <>
+          <div className="v-profile">
+            <span className="v-avatar-lg">{user.name[0]?.toUpperCase()}</span>
+            <b>{user.name}</b>
+            <span className="v-mute">{user.email ?? "Cliente"}</span>
+          </div>
+          <InstallBanner />
+          <button className="v-row-btn" onClick={() => { signOut(); router.replace("/app"); }}>
+            <LogOut size={20} /><span>Sair</span><ChevronRight size={18} className="v-mute" />
+          </button>
+        </>
+      ) : (
+        <div className="v-center top">
+          <CircleUserRound size={64} className="v-brand-ico" strokeWidth={1.4} />
+          <p className="v-mute">Entre para salvar seus fornecedores favoritos e conversar com eles.</p>
+          <Link href="/app/entrar" className="btn pri lg">Entrar ou criar conta</Link>
+          <InstallBanner />
+          <div className="v-promo">
+            <b>Tem um negócio de eventos?</b>
+            <p className="v-mute">Crie uma conta de fornecedor e apareça para quem está planejando uma festa.</p>
+            <Link href="/app/entrar?modo=cadastro&tipo=fornecedor" className="v-link">Quero divulgar meus serviços</Link>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

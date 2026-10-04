@@ -22,7 +22,7 @@ function dayLabel(d: Date) {
 }
 
 // Conversa completa: responder, reagir, editar, apagar, "digitando…", visto. Usada na tela de Mensagens e nas janelas flutuantes.
-export default function ChatThread({ id, name, me, active = true, onActivity }: { id: string; name: string; me: string; active?: boolean; onActivity?: () => void }) {
+export default function ChatThread({ id, name, me, active = true, onActivity, call = providerApi }: { id: string; name: string; me: string; active?: boolean; onActivity?: () => void; call?: typeof providerApi }) {
   const confirm = useConfirm();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [otherRead, setOtherRead] = useState<string | null>(null);
@@ -63,7 +63,7 @@ export default function ChatThread({ id, name, me, active = true, onActivity }: 
     if (!initial && cursor.current) qs.set("after", cursor.current);
     if (activeRef.current && document.visibilityState === "visible") qs.set("read", "1");
     try {
-      const r = await providerApi(`/api/chat/conversations/${id}/messages?${qs}`);
+      const r = await call(`/api/chat/conversations/${id}/messages?${qs}`);
       setOtherRead(r.otherReadAt); setTyping(!!r.otherTyping);
       if (r.messages.length) {
         let changed = false;
@@ -75,7 +75,7 @@ export default function ChatThread({ id, name, me, active = true, onActivity }: 
         if (changed) onActivityRef.current?.();
       }
     } catch { /* tenta de novo no próximo ciclo */ } finally { if (initial) setLoading(false); }
-  }, [id, merge]);
+  }, [id, merge, call]);
 
   useEffect(() => {
     poll(true);
@@ -102,7 +102,7 @@ export default function ChatThread({ id, name, me, active = true, onActivity }: 
     stick.current = true;
     setMsgs((p) => [...p.filter((m) => m.id !== tid), { id: tid, body, senderId: me, createdAt: new Date().toISOString(), pending: true, replyTo: reply ?? null, reactions: [] }]);
     try {
-      const real = await providerApi(`/api/chat/conversations/${id}/messages`, { method: "POST", body: { body, replyToId: reply?.id ?? null } });
+      const real = await call(`/api/chat/conversations/${id}/messages`, { method: "POST", body: { body, replyToId: reply?.id ?? null } });
       setMsgs((p) => p.filter((m) => m.id !== tid));
       versions.current.set(real.id, real.updatedAt); merge([real]); onActivityRef.current?.();
     } catch { setMsgs((p) => p.map((m) => (m.id === tid ? { ...m, pending: false, failed: true } : m))); }
@@ -111,13 +111,13 @@ export default function ChatThread({ id, name, me, active = true, onActivity }: 
     if (body === m.body) return;
     const before = m;
     setMsgs((p) => p.map((x) => (x.id === m.id ? { ...x, body, editedAt: new Date().toISOString() } : x)));
-    try { await providerApi(`/api/chat/messages/${m.id}`, { method: "PATCH", body: { body } }); }
+    try { await call(`/api/chat/messages/${m.id}`, { method: "PATCH", body: { body } }); }
     catch (e: any) { toast.error(e.message); setMsgs((p) => p.map((x) => (x.id === m.id ? before : x))); }
   }
   async function remove(m: Msg) {
     if (!(await confirm({ tone: "danger", title: "Apagar esta mensagem?", message: "Ela será apagada para você e para a outra pessoa.", confirmLabel: "Apagar" }))) return;
     setMsgs((p) => p.map((x) => (x.id === m.id ? { ...x, deleted: true, body: "", reactions: [] } : x)));
-    try { await providerApi(`/api/chat/messages/${m.id}`, { method: "DELETE" }); }
+    try { await call(`/api/chat/messages/${m.id}`, { method: "DELETE" }); }
     catch (e: any) { toast.error(e.message); setMsgs((p) => p.map((x) => (x.id === m.id ? m : x))); }
   }
   function react(m: Msg, emoji: string) {
@@ -125,7 +125,7 @@ export default function ChatThread({ id, name, me, active = true, onActivity }: 
     const next = current === emoji ? null : emoji;
     setMsgs((p) => p.map((x) => (x.id === m.id ? { ...x, reactions: [...x.reactions.filter((r) => r.userId !== me), ...(next ? [{ emoji: next, userId: me }] : [])] } : x)));
     setEmojiFor(null);
-    providerApi(`/api/chat/messages/${m.id}/reaction`, { method: "PUT", body: { emoji: next } }).catch(() => toast.error("Não foi possível reagir"));
+    call(`/api/chat/messages/${m.id}/reaction`, { method: "PUT", body: { emoji: next } }).catch(() => toast.error("Não foi possível reagir"));
   }
   function jump(mid: string) {
     const el = rows.current.get(mid);
@@ -145,7 +145,7 @@ export default function ChatThread({ id, name, me, active = true, onActivity }: 
   }
   function onType(v: string) {
     setText(v);
-    if (v.trim() && !editing && Date.now() - lastPing.current > 3000) { lastPing.current = Date.now(); providerApi(`/api/chat/conversations/${id}/typing`, { method: "POST" }).catch(() => {}); }
+    if (v.trim() && !editing && Date.now() - lastPing.current > 3000) { lastPing.current = Date.now(); call(`/api/chat/conversations/${id}/typing`, { method: "POST" }).catch(() => {}); }
   }
 
   const lastMine = [...msgs].reverse().find((m) => m.senderId === me && !m.pending && !m.failed && !m.deleted);

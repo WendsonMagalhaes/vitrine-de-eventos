@@ -1,0 +1,24 @@
+{
+  "id": "/admin",
+  "name": "Vitrine Eventos — Administração",
+  "short_name": "Admin",
+  "description": "Moderação de fornecedores, categorias, banners e usuários da Vitrine Eventos.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/admin?source=pwa",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF8F7",
+  "theme_color": "#3A2F52",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Fornecedores", "url": "/admin/fornecedores", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Banners", "url": "/admin/banners", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
