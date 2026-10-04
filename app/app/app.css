@@ -44,7 +44,7 @@ body{-webkit-tap-highlight-color:transparent}
 .v-tabs a{flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:var(--r-md);color:var(--mute);font-size:11px;font-weight:600}
 .v-tabs a.on{background:var(--soft);color:var(--on-brand)}
 .v-tab-ico{position:relative;display:grid;place-items:center}
-.v-brand{display:none!important}
+.v-brand,.v-side-foot{display:none!important}
 .v-badge{position:absolute;top:-6px;right:-12px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--on-bad);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;line-height:1}
 .v-badge.static{position:static;min-width:22px;height:22px;font-size:11px;flex:none}
 
@@ -173,6 +173,16 @@ span.v-chip{cursor:default}
   .v-tabs a:hover{background:rgba(255,255,255,.08);color:#fff}
   .v-tabs a.on{background:var(--brand);color:var(--on-brand);font-weight:700}
   .v-tabs .v-brand:hover{background:transparent}
+  .v-tabs .v-side-foot{display:flex!important;flex-direction:column;gap:8px;margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+  .v-tabs .v-side-link,.v-tabs .v-side-login{flex:none;min-height:42px}
+  .v-tabs .v-side-login{background:var(--brand);color:var(--on-brand);font-weight:700;justify-content:center}
+  .v-tabs .v-side-login:hover{background:var(--brand);color:var(--on-brand);filter:brightness(.96)}
+  .v-side-user{display:flex;align-items:center;gap:10px;padding:0 4px;color:#fff;min-width:0}
+  .v-side-user>div{flex:1;min-width:0}
+  .v-side-user b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .v-side-user small{display:block;font-size:12px;color:rgba(255,255,255,.62)}
+  .v-side-user .icon{color:rgba(255,255,255,.74)}
+  .v-side-user .icon:hover{background:rgba(255,255,255,.1);color:#fff}
   .v-tab-lbl{font-size:14px}
   .v-root.has-tabs .v-main{padding:32px 32px 48px;max-width:860px;margin:0 auto}
   .v-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -188,5 +198,5 @@ span.v-chip{cursor:default}
   .v-hero{height:280px}
   .v-photos{grid-template-columns:repeat(3,1fr)}
 }
-@media (min-width:900px) and (max-width:1100px){ .v-tabs{width:76px!important} .v-tabs .v-brand b,.v-tab-lbl{display:none} .v-tabs a{justify-content:center;padding:0} .v-badge{right:-8px} }
+@media (min-width:900px) and (max-width:1100px){ .v-tabs{width:76px!important} .v-tabs .v-brand b,.v-tab-lbl,.v-side-link span,.v-side-login span,.v-side-user>div{display:none} .v-tabs a{justify-content:center;padding:0} .v-badge{right:-8px} }
 @media (prefers-reduced-motion:reduce){.spin{animation:none}.v-cat-ico,.v-dots span{transition:none}}

@@ -19,9 +19,9 @@ export default function FornecedorPage() {
   const { user } = useSession();
   const [tab, setTab] = useState<TabKey>("services");
   const { data: p, loading, error } = useApi<any>(`/api/providers/${id}`);
-  const isClient = user?.role === "CLIENT";
-  const canSave = !user || isClient; // favoritar é só para cliente (ou visitante, que é levado ao login)
-  const favs = useApi<any[]>(isClient ? "/api/favorites" : null);
+  const own = !!user?.provider && user.provider.id === id; // o fornecedor vendo o próprio perfil
+  const canSave = !user || (user.role !== "ADMIN" && !own); // visitante é levado ao login ao tocar no coração
+  const favs = useApi<any[]>(user && user.role !== "ADMIN" ? "/api/favorites" : null);
   const saved = !!favs.data?.some((f) => f.id === id);
   const chat = useStartChat(p?.id, `/app/fornecedor/${id}`);
 

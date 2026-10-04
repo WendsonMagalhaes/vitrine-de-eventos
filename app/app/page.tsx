@@ -6,7 +6,6 @@ import { Image as ImageIcon, Search } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useSession } from "@/lib/clientSession";
 import { pastel } from "@/lib/pastel";
-import { InstallBanner } from "@/lib/pwa";
 import { AllIcon, CAT_ICON, Loading, Notice, ProviderCard, Tag, catLine } from "./ui";
 
 // Mesmas cores pastel do painel (campo "color" do banner).
@@ -54,7 +53,6 @@ export default function Home() {
 
   return (
     <>
-      <InstallBanner />
       <h1 className="v-h1">Olá{user ? `, ${user.name.split(" ")[0]}` : ""}</h1>
       <p className="v-mute v-sub">O que seu evento precisa?</p>
       <form className="v-search" role="search" onSubmit={(e) => { e.preventDefault(); router.push(`/app/buscar${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`); }}>

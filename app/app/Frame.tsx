@@ -2,9 +2,10 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Heart, Home, MessageCircle, Search, Sparkles, User } from "lucide-react";
+import { Heart, Home, LogIn, LogOut, MessageCircle, Search, Sparkles, Store, User } from "lucide-react";
 import { useSession } from "@/lib/clientSession";
-import { Loading } from "./ui";
+import { Avatar } from "@/lib/ui";
+import { Loading, loginHref } from "./ui";
 
 const TABS = [
   { href: "/app", label: "Início", icon: Home },
@@ -16,13 +17,13 @@ const TABS = [
 const isTabRoute = (p: string) => TABS.some((t) => t.href === p);
 
 // Estrutura do app: abas embaixo no celular (menu lateral no computador). Telas de detalhe, conversa e login ocupam a tela toda.
-// Como no app de celular, fornecedor e administrador não usam as abas da vitrine: cada um vai para o seu painel.
+// O fornecedor também usa a vitrine como cliente; só o administrador é levado ao próprio painel.
 export default function Frame({ children }: { children: React.ReactNode }) {
   const path = usePathname().replace(/\/$/, "") || "/app";
   const router = useRouter();
-  const { user, ready, unread } = useSession();
+  const { user, ready, unread, signOut } = useSession();
   const tabs = isTabRoute(path);
-  const redirect = tabs && ready && user && user.role !== "CLIENT" ? (user.role === "ADMIN" ? "/admin" : "/fornecedor") : null;
+  const redirect = tabs && ready && user?.role === "ADMIN" ? "/admin" : null;
 
   useEffect(() => { if (redirect) router.replace(redirect); }, [redirect, router]);
 
@@ -42,6 +43,21 @@ export default function Frame({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          {/* Conta: aparece só no menu lateral (computador). No celular, Entrar e Sair ficam na aba Perfil. */}
+          <div className="v-side-foot">
+            {user ? (
+              <>
+                {user.role === "PROVIDER" && <Link href="/fornecedor" className="v-side-link"><Store size={18} /><span>Meu painel</span></Link>}
+                <div className="v-side-user">
+                  <Avatar name={user.name} />
+                  <div><b>{user.name}</b><small>{user.role === "PROVIDER" ? "Fornecedor" : "Cliente"}</small></div>
+                  <button className="icon" onClick={() => { signOut(); router.replace("/app"); }} aria-label="Sair" title="Sair"><LogOut size={18} /></button>
+                </div>
+              </>
+            ) : (
+              <Link href={loginHref(path)} className="v-side-login"><LogIn size={18} /><span>Entrar</span></Link>
+            )}
+          </div>
         </nav>
       )}
       <main className="v-main">{children}</main>

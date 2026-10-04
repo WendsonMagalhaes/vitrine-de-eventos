@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { adminApi, tokenKey } from "./adminApi";
+import { adminApi } from "./adminApi";
+import { clearAllSessions } from "./authStore";
 
 export function useAdminData<T = any>(path: string) {
   const router = useRouter();
@@ -11,7 +12,7 @@ export function useAdminData<T = any>(path: string) {
   const reload = useCallback(async () => {
     try { setData(await adminApi(path)); setError(""); }
     catch (e: any) {
-      if (e.status === 401 || e.status === 403) { localStorage.removeItem(tokenKey); router.replace("/admin/login"); }
+      if (e.status === 401 || e.status === 403) { clearAllSessions(); router.replace("/login?next=/admin"); }
       else setError(e.message);
     } finally { setLoading(false); }
   }, [path, router]);

@@ -11,7 +11,7 @@ const when = (iso: string) => { const d = new Date(iso); return sameDay(d, new D
 
 export default function Mensagens() {
   const { user } = useSession();
-  const q = useApi<any[]>(user?.role === "CLIENT" ? "/api/chat/conversations" : null, { interval: 4000 });
+  const q = useApi<any[]>(user && user.role !== "ADMIN" ? "/api/chat/conversations?as=client" : null, { interval: 4000 });
   if (!user) return <SignInPrompt icon={MessageCircle} text="Entre para conversar com os fornecedores." next="/app/mensagens" />;
   return (
     <>
@@ -20,7 +20,7 @@ export default function Mensagens() {
         <div className="v-center">
           <span className="v-tile"><MessageCircle size={26} /></span>
           <b>{q.error ? "Não foi possível carregar" : "Nenhuma conversa ainda"}</b>
-          <p className="v-mute">{q.error ? "Verifique a conexão e tente de novo." : "As conversas aparecem aqui assim que a primeira mensagem for enviada."}</p>
+          <p className="v-mute">{q.error ? "Verifique a conexão e tente de novo." : user.role === "PROVIDER" ? "Aqui ficam as conversas que você abriu com outros fornecedores. As mensagens dos seus clientes estão no seu painel." : "As conversas aparecem aqui assim que a primeira mensagem for enviada."}</p>
         </div>
       ) : (
         <div className="v-list">

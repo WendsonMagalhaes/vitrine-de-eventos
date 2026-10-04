@@ -5,8 +5,9 @@ export const dynamic = "force-dynamic";
 
 // Total de mensagens não lidas (número no ícone) e a mais recente delas (prévia do aviso flutuante).
 // Leve o bastante para consultar a cada poucos segundos.
-export const GET = route(["CLIENT", "PROVIDER"], async (_r, _c, s) => {
-  const isClient = s.role === "CLIENT";
+// Fornecedor conta as mensagens recebidas no painel; com ?as=client conta as da vitrine (como cliente de outros fornecedores).
+export const GET = route(["CLIENT", "PROVIDER"], async (req, _c, s) => {
+  const isClient = s.role === "CLIENT" || req.nextUrl.searchParams.get("as") === "client";
   const convs: any[] = await prisma.conversation.findMany({
     where: isClient ? { clientId: s.sub } : { provider: { userId: s.sub } },
     select: { id: true, clientReadAt: true, providerReadAt: true },

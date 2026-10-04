@@ -20,7 +20,7 @@ export const PUT = route(["CLIENT", "PROVIDER"], async (req, ctx, s) => {
 
   if (emoji && m.senderId !== s.sub) {
     const who = part.side === "client" ? part.conv.client.name : part.conv.provider.name;
-    await sendPushToUser(m.senderId, { title: who, body: `reagiu ${emoji} à sua mensagem`, data: { conversationId: m.conversationId } });
+    await sendPushToUser(m.senderId, { title: who, body: `reagiu ${emoji} à sua mensagem`, data: { conversationId: m.conversationId, to: part.side === "client" ? "provider" : "client" } });
   }
   return json({ ok: true });
 });

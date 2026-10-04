@@ -5,6 +5,7 @@ import { providerApi } from "@/lib/providerApi";
 import { useProvider } from "@/lib/providerContext";
 import { Avatar, Field, PageHeader, PasswordInput } from "@/lib/ui";
 import { Badge } from "@/lib/providerActions";
+import { PushToggle } from "@/lib/webPush";
 
 export default function Conta() {
   const { me, reload } = useProvider();
@@ -15,6 +16,7 @@ export default function Conta() {
     <PageHeader title="Conta" description="Dados do seu negócio e de acesso ao painel e ao aplicativo." />
     <div className="cols">
       <div className="stack">
+        <PushToggle scope="/" api={providerApi} />
         <AccountCard me={me} reload={reload} savedEmail={savedEmail} onEmail={setSavedEmail} />
         <PasswordCard />
       </div>

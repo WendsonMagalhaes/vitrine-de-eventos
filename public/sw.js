@@ -1,14 +1,13 @@
-/* Service worker dos apps web: /app (cliente), /fornecedor e /admin. Cada escopo é registrado à parte.
+/* Service worker do site (escopo "/"): vitrine do cliente, painel do fornecedor e administração.
    - Telas (navegação): rede primeiro; sem internet, mostra a última versão guardada ou a tela offline.
    - Arquivos estáticos do Next, ícones e fontes: guardados na primeira vez e servidos do cache depois.
    - Dados públicos da vitrine (categorias, banners, fornecedores): atualiza em segundo plano e usa o cache se faltar internet.
    - Nada de conta, mensagens ou favoritos é guardado aqui: esses dados só existem com internet. */
-const VERSION = "v2";
+const VERSION = "v4";
 const PAGES = `vitrine-pages-${VERSION}`;
 const STATIC = `vitrine-static-${VERSION}`;
 const DATA = `vitrine-data-${VERSION}`;
 const OFFLINE = "/offline.html";
-const APP_SCOPES = ["/app", "/fornecedor", "/admin"];
 const PUBLIC_API = [/^\/api\/categories$/, /^\/api\/banners$/, /^\/api\/providers(\/[^/]+)?$/];
 
 self.addEventListener("install", (event) => {
@@ -29,7 +28,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     if (req.headers.has("authorization")) return; // nunca guarda resposta de quem está logado
-    if (req.mode === "navigate" && APP_SCOPES.some((p) => url.pathname === p || url.pathname.startsWith(p + "/"))) return event.respondWith(pageStrategy(req));
+    if (req.mode === "navigate" && !url.pathname.startsWith("/api/")) return event.respondWith(pageStrategy(req));
     if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) return event.respondWith(cacheFirst(req, STATIC));
     if (PUBLIC_API.some((re) => re.test(url.pathname)) && !url.search.includes("q=")) return event.respondWith(staleWhileRevalidate(req, DATA));
   } else if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com" || url.hostname === "res.cloudinary.com") {
@@ -62,21 +61,27 @@ async function staleWhileRevalidate(req, name) {
   return hit || (await net) || Response.error();
 }
 
-// Aviso de mensagem (Web Push): fica pronto para a etapa de notificações; hoje só funciona se a API enviar push web.
+// Aviso de mensagem (Web Push). A API envia {title, body, conversationId, url}; "url" já é a tela certa para cada perfil.
 self.addEventListener("push", (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch { /* sem corpo */ }
-  event.waitUntil(self.registration.showNotification(data.title || "Vitrine Eventos", {
-    body: data.body || "", icon: "/icons/icon-192.png", badge: "/icons/favicon-32.png", tag: data.conversationId || "vitrine-chat",
-    data: { url: data.url || (data.conversationId ? `/app/chat/${data.conversationId}` : "/app/mensagens") },
-  }));
+  event.waitUntil((async () => {
+    // Se o app está aberto e à vista, ele mesmo mostra as mensagens: não repete o aviso por cima.
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    if (open.some((c) => c.visibilityState === "visible" && c.focused)) return;
+    await self.registration.showNotification(data.title || "Vitrine Eventos", {
+      body: data.body || "", icon: "/icons/icon-192.png", badge: "/icons/favicon-32.png",
+      tag: data.conversationId || "vitrine-chat", renotify: true,
+      data: { url: data.url || "/app/mensagens" },
+    });
+  })());
 });
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "/app/mensagens";
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const c of all) if (new URL(c.url).pathname.startsWith("/" + url.split("/")[1]) && "focus" in c) { await c.focus(); if ("navigate" in c) await c.navigate(url); return; }
+    for (const c of all) if ("focus" in c) { await c.focus(); if ("navigate" in c) await c.navigate(url); return; }
     await self.clients.openWindow(url);
   })());
 });

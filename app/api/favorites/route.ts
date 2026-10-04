@@ -2,8 +2,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { json, route } from "@/lib/server";
 
-// Favoritar é coisa de cliente: fornecedor e admin não usam.
-const ANY = ["CLIENT"] as const;
+// Favoritar é para quem navega na vitrine: cliente e fornecedor (que também é cliente dos outros). Admin não usa.
+const ANY = ["CLIENT", "PROVIDER"] as const;
 export const GET = route([...ANY], async (_r, _c, s) => {
   const favs = await prisma.favorite.findMany({
     where: { userId: s.sub, provider: { status: "APPROVED" } }, orderBy: { createdAt: "desc" },
@@ -15,7 +15,9 @@ export const GET = route([...ANY], async (_r, _c, s) => {
 });
 export const POST = route([...ANY], async (req, _c, s) => {
   const { providerId } = z.object({ providerId: z.string() }).parse(await req.json());
-  if (!(await prisma.provider.findFirst({ where: { id: providerId, status: "APPROVED" } }))) return json({ error: "Fornecedor não encontrado" }, 404);
+  const target = await prisma.provider.findFirst({ where: { id: providerId, status: "APPROVED" }, select: { userId: true } });
+  if (!target) return json({ error: "Fornecedor não encontrado" }, 404);
+  if (target.userId === s.sub) return json({ error: "Você não pode favoritar o seu próprio perfil" }, 400);
   await prisma.favorite.upsert({ where: { userId_providerId: { userId: s.sub, providerId } }, update: {}, create: { userId: s.sub, providerId } });
   return json({ ok: true }, 201);
 });

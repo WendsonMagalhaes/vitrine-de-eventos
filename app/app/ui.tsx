@@ -11,6 +11,7 @@ import type { LucideIcon } from "lucide-react";
 import { Thumb } from "@/lib/pastel";
 import { clientApi } from "@/lib/clientApi";
 import { useSession } from "@/lib/clientSession";
+import { useDock } from "./ClientDock";
 
 export const CAT_ICON: Record<string, LucideIcon> = {
   buffet: UtensilsCrossed, bebidas: Wine, decoracao: Flower2, "foto-e-video": Camera, musica: Music,
@@ -19,7 +20,7 @@ export const CAT_ICON: Record<string, LucideIcon> = {
 export const AllIcon = LayoutGrid;
 export const catLine = (p: any) => p.categories.map((x: any) => x.category.name).join(" · ") + (p.city ? ` · ${p.city}` : "");
 export const whatsappUrl = (num: string, msg: string) => `https://wa.me/${num.startsWith("55") ? num : `55${num}`}?text=${encodeURIComponent(msg)}`;
-export const loginHref = (next?: string) => `/app/entrar${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+export const loginHref = (next?: string) => `/login${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
 export function Loading({ full }: { full?: boolean }) {
   return <div className={full ? "v-loading full" : "v-loading"} role="status" aria-label="Carregando"><LoaderCircle className="spin" size={22} /></div>;
@@ -67,20 +68,23 @@ export function SignInPrompt({ icon: Icon, text, next }: { icon: LucideIcon; tex
 }
 export const prompts = { heart: Heart, chat: MessageCircle };
 
-// Abre (ou retoma) a conversa com um fornecedor. Visitante é levado ao login; fornecedor e admin não iniciam conversa.
+// Abre (ou retoma) a conversa com um fornecedor.
 export function useStartChat(providerId: string | undefined, next: string) {
   const { user } = useSession();
   const router = useRouter();
+  const dock = useDock();
   const [busy, setBusy] = useState(false);
-  const canChat = !!providerId && (!user || user.role === "CLIENT");
+  // Visitante é levado ao login; cliente e fornecedor conversam (o fornecedor não conversa consigo mesmo); admin não.
+  const canChat = !!providerId && (!user || (user.role !== "ADMIN" && user.provider?.id !== providerId));
   const start = useCallback(async () => {
     if (!user) { router.push(loginHref(next)); return; }
     setBusy(true);
     try {
       const r = await clientApi("/api/chat/conversations", { method: "POST", body: { providerId } });
-      router.push(`/app/chat/${r.id}`);
+      // No computador abre a janela flutuante (a página continua); no celular/PWA vai para a tela de conversa.
+      if (dock) { dock.open(r.id); setBusy(false); } else router.push(`/app/chat/${r.id}`);
     } catch (e: any) { toast.error(e.message); setBusy(false); }
-  }, [user, providerId, next, router]);
+  }, [user, providerId, next, router, dock]);
   return { canChat, start, busy };
 }
 

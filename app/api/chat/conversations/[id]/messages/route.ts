@@ -53,6 +53,6 @@ export const POST = route(["CLIENT", "PROVIDER"], async (req, ctx, s) => {
 
   const toUserId = side === "client" ? conv.provider.userId : conv.clientId;
   const fromName = side === "client" ? conv.client.name : conv.provider.name;
-  await sendPushToUser(toUserId, { title: fromName, body: body.length > 120 ? `${body.slice(0, 117)}…` : body, data: { conversationId: id } });
+  await sendPushToUser(toUserId, { title: fromName, body: body.length > 120 ? `${body.slice(0, 117)}…` : body, data: { conversationId: id, to: side === "client" ? "provider" : "client" } });
   return json(serializeMessage(msg), 201);
 });

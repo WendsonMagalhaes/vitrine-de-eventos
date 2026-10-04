@@ -4,9 +4,10 @@ import { json, route } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
 
-// Lista as conversas de quem está logado (cliente ou fornecedor), a mais recente primeiro, com o que não foi lido.
-export const GET = route(["CLIENT", "PROVIDER"], async (_r, _c, s) => {
-  const isClient = s.role === "CLIENT";
+// Lista as conversas de quem está logado, a mais recente primeiro, com o que não foi lido.
+// Cliente vê as suas conversas com fornecedores. Fornecedor vê as que recebeu; com ?as=client vê as que ele abriu como cliente na vitrine.
+export const GET = route(["CLIENT", "PROVIDER"], async (req, _c, s) => {
+  const isClient = s.role === "CLIENT" || req.nextUrl.searchParams.get("as") === "client";
   const convs: any[] = await prisma.conversation.findMany({
     where: { messages: { some: {} }, ...(isClient ? { clientId: s.sub } : { provider: { userId: s.sub } }) },
     orderBy: { lastMessageAt: "desc" }, take: 100,
@@ -27,11 +28,12 @@ export const GET = route(["CLIENT", "PROVIDER"], async (_r, _c, s) => {
   })));
 });
 
-// Cliente abre (ou retoma) a conversa com um fornecedor publicado.
-export const POST = route(["CLIENT"], async (req, _c, s) => {
+// Abre (ou retoma) a conversa com um fornecedor publicado. Vale para cliente e para fornecedor (como cliente de outro fornecedor).
+export const POST = route(["CLIENT", "PROVIDER"], async (req, _c, s) => {
   const { providerId } = z.object({ providerId: z.string().min(1) }).parse(await req.json());
-  const provider = await prisma.provider.findFirst({ where: { id: providerId, status: "APPROVED" }, select: { id: true } });
+  const provider = await prisma.provider.findFirst({ where: { id: providerId, status: "APPROVED" }, select: { id: true, userId: true } });
   if (!provider) return json({ error: "Fornecedor indisponível" }, 404);
+  if (provider.userId === s.sub) return json({ error: "Você não pode conversar consigo mesmo" }, 400);
   const conv = await prisma.conversation.upsert({
     where: { clientId_providerId: { clientId: s.sub, providerId } }, update: {}, create: { clientId: s.sub, providerId },
   });

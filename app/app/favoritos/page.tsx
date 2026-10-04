@@ -8,7 +8,7 @@ import { Chip, Loading, Notice, ProviderCard, SignInPrompt } from "../ui";
 export default function Favoritos() {
   const { user } = useSession();
   const [cat, setCat] = useState<string | null>(null);
-  const { data, loading } = useApi<any[]>(user?.role === "CLIENT" ? "/api/favorites" : null);
+  const { data, loading } = useApi<any[]>(user && user.role !== "ADMIN" ? "/api/favorites" : null);
   if (!user) return <SignInPrompt icon={Heart} text="Entre para salvar e ver seus favoritos." next="/app/favoritos" />;
 
   const names = [...new Set<string>((data ?? []).flatMap((p) => p.categories.map((x: any) => x.category.name)))];

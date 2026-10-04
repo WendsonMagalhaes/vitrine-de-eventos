@@ -1,12 +1,15 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Images, LayoutDashboard, MessageCircle, Package, UserCog, UserRound } from "lucide-react";
+import Link from "next/link";
+import { Images, LayoutDashboard, MessageCircle, Package, Store, UserCog, UserRound } from "lucide-react";
 import { providerApi, providerTokenKey } from "@/lib/providerApi";
 import { ProviderContext } from "@/lib/providerContext";
 import { Badge } from "@/lib/providerActions";
 import AppShell from "@/lib/AppShell";
 import { DockProvider, Notifier } from "./ChatDock";
+import { disableWebPush, useSyncWebPush } from "@/lib/webPush";
+import { clearAllSessions } from "@/lib/authStore";
 
 const NAV = [
   { href: "/fornecedor", label: "Início", icon: LayoutDashboard },
@@ -31,7 +34,7 @@ function Panel({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const [feed, setFeed] = useState<{ count: number; latest: any } | null>(null);
 
-  const logout = useCallback(() => { localStorage.removeItem(providerTokenKey); router.replace("/fornecedor/login"); }, [router]);
+  const logout = useCallback(() => { void disableWebPush("/", providerApi); clearAllSessions(); router.replace("/login?next=/fornecedor"); }, [router]);
   const load = useCallback(async () => {
     try {
       const [m, c] = await Promise.all([providerApi("/api/providers/me"), providerApi("/api/categories")]);
@@ -42,7 +45,7 @@ function Panel({ children }: { children: React.ReactNode }) {
     }
   }, [logout]);
   useEffect(() => {
-    if (!localStorage.getItem(providerTokenKey)) router.replace("/fornecedor/login"); else load();
+    if (!localStorage.getItem(providerTokenKey)) router.replace("/login?next=/fornecedor"); else load();
   }, [router, load]);
 
   // Mensagens não lidas (e a mais recente, para o aviso): consulta a cada 3 s (o navegador reduz o ritmo sozinho em aba escondida).
@@ -50,6 +53,7 @@ function Panel({ children }: { children: React.ReactNode }) {
     try { setFeed(await providerApi("/api/chat/unread")); } catch { /* tenta no próximo ciclo */ }
   }, []);
   const ready = !!me;
+  useSyncWebPush("/", providerApi, ready, me?.userId);
   useEffect(() => {
     if (!ready) return;
     refreshUnread();
@@ -66,7 +70,7 @@ function Panel({ children }: { children: React.ReactNode }) {
   const nav = NAV.map((i) => (i.href === "/fornecedor/mensagens" ? { ...i, badge: n } : i));
   return (
     <ProviderContext.Provider value={{ me, cats, reload: load, unread: n, latest: feed ? feed.latest : undefined, refreshUnread }}>
-      <AppShell nav={nav} area="Painel do fornecedor" user={{ name: me.name, role: "Fornecedor" }} badge={<Badge status={me.status} />} onLogout={logout}>
+      <AppShell nav={nav} area="Painel do fornecedor" user={{ name: me.name, role: "Fornecedor" }} badge={<><Link href="/app" className="btn sm" title="Ver a vitrine como cliente"><Store size={14} /><span className="lbl-sm">Ver vitrine</span></Link><Badge status={me.status} /></>} onLogout={logout}>
         {/* O chat flutuante e os avisos ficam dentro do AppShell para usar o mesmo ConfirmProvider e Toaster do painel. */}
         <DockProvider>
           <Notifier />

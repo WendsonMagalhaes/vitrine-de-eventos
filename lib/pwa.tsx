@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import { Download, Share, X } from "lucide-react";
 import "./pwa.css";
 
-// Registra o service worker no escopo de cada app (/app, /fornecedor, /admin). Cada escopo é um app instalável separado.
-export function useServiceWorker(scope = "/app") {
+// Registra o service worker do site inteiro (escopo "/"): um único app instalável para cliente, fornecedor e administrador.
+export function useServiceWorker(scope = "/") {
   useEffect(() => {
     if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") return;
     navigator.serviceWorker.register("/sw.js", { scope }).catch(() => { /* sem PWA offline desta vez */ });
   }, [scope]);
 }
 
-// Para os painéis: registra o service worker e mostra o convite de instalação flutuante.
-export function PwaBoot({ scope }: { scope: string }) {
-  useServiceWorker(scope);
+// Fica no layout raiz: registra o service worker e mostra o convite de instalação flutuante.
+export function PwaBoot() {
+  useServiceWorker();
   return <InstallBanner floating />;
 }
 
@@ -21,7 +21,7 @@ type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ out
 const DISMISS = "vitrine_install_dismissed";
 
 // Convite para instalar. No Android/Chrome usa o aviso nativo; no iPhone mostra o passo "Compartilhar > Tela de Início".
-export function InstallBanner({ floating = false }: { floating?: boolean }) {
+export function InstallBanner({ floating = false, ignoreDismiss = false }: { floating?: boolean; ignoreDismiss?: boolean }) {
   const [evt, setEvt] = useState<BIPEvent | null>(null);
   const [ios, setIos] = useState(false);
   const [hidden, setHidden] = useState(true);
@@ -29,7 +29,7 @@ export function InstallBanner({ floating = false }: { floating?: boolean }) {
   useEffect(() => {
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
     let dismissed = false;
-    try { dismissed = !!localStorage.getItem(DISMISS); } catch { /* ignora */ }
+    try { dismissed = !ignoreDismiss && !!localStorage.getItem(DISMISS); } catch { /* ignora */ }
     if (standalone || dismissed) return;
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
     setIos(isIos); setHidden(!isIos);
@@ -41,7 +41,7 @@ export function InstallBanner({ floating = false }: { floating?: boolean }) {
   }, []);
 
   if (hidden || (!evt && !ios)) return null;
-  const close = () => { setHidden(true); try { localStorage.setItem(DISMISS, "1"); } catch { /* ignora */ } };
+  const close = () => { setHidden(true); if (!ignoreDismiss) try { localStorage.setItem(DISMISS, "1"); } catch { /* ignora */ } };
   return (
     <div className={`v-install ${floating ? "float" : ""}`} role="region" aria-label="Instalar o aplicativo">
       <span className="v-install-ico"><Download size={18} /></span>
