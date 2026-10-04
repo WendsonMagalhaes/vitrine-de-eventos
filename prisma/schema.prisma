@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CLIENT
+  PROVIDER
+  ADMIN
+}
+
+enum ProviderStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         Role       @default(CLIENT)
+  createdAt    DateTime   @default(now())
+  provider     Provider?
+  favorites    Favorite[]
+  conversations Conversation[] @relation("ClientConversations")
+  messages     Message[]
+  pushTokens   PushToken[]
+  reactions    MessageReaction[]
+}
+model Provider {
+  id          String         @id @default(cuid())
+  userId      String         @unique
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  city        String?
+  phone       String?
+  whatsapp    String?
+  status      ProviderStatus @default(DRAFT)
+  featured    Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  categories  ProviderCategory[]
+  services    Service[]
+  images      PortfolioImage[]
+  favorites   Favorite[]
+  banners     Banner[]
+  conversations Conversation[]
+  @@index([status, featured])
+  @@index([city])
+}
+model Category {
+  id        String @id @default(cuid())
+  name      String @unique
+  slug      String @unique
+  sortOrder Int    @default(0)
+  providers ProviderCategory[]
+}
+model ProviderCategory {
+  providerId String
+  categoryId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  @@id([providerId, categoryId])
+}
+model Service {
+  id          String   @id @default(cuid())
+  providerId  String
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  priceFrom   Int?     // em centavos; null = sob consulta
+  includes    String[]
+  imageUrl      String?  // foto do serviço (Cloudinary)
+  imagePublicId String?
+  createdAt   DateTime @default(now())
+  @@index([providerId])
+}
+model PortfolioImage {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  url        String
+  publicId   String
+  sortOrder  Int      @default(0)
+  @@index([providerId])
+}
+model Favorite {
+  userId     String
+  providerId String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  @@id([userId, providerId])
+}
+
+// Banners da home do app. Sem imagem, o app usa um degradê pastel (campo color).
+model Banner {
+  id         String    @id @default(cuid())
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  color      String    @default("lilac") // lilac | mint | peach | sky
+  providerId String?
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  active     Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@index([active, sortOrder])
+}
+
+// Chat 1:1 entre um cliente e um fornecedor. O administrador não lê conversas.
+model Conversation {
+  id             String    @id @default(cuid())
+  clientId       String
+  client         User      @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
+  providerId     String
+  provider       Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  lastMessageAt  DateTime  @default(now())
+  clientReadAt   DateTime? // até quando o cliente já leu
+  providerReadAt DateTime? // até quando o fornecedor já leu
+  clientTypingAt   DateTime? // última vez que o cliente estava digitando
+  providerTypingAt DateTime?
+  createdAt      DateTime  @default(now())
+  messages       Message[]
+  @@unique([clientId, providerId])
+  @@index([clientId, lastMessageAt])
+  @@index([providerId, lastMessageAt])
+}
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt // muda ao editar, apagar ou reagir: o app busca por aqui
+  editedAt       DateTime?
+  deletedAt      DateTime?    // apagada para os dois lados (o texto é removido)
+  replyToId      String?
+  replyTo        Message?     @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        Message[]    @relation("MessageReplies")
+  reactions      MessageReaction[]
+  @@index([conversationId, createdAt])
+  @@index([conversationId, updatedAt])
+}
+// Uma reação por pessoa em cada mensagem (trocar de emoji substitui; repetir o mesmo remove).
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+  @@unique([messageId, userId])
+  @@index([messageId])
+}
+// Tokens do Expo para notificação push no celular.
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String   @default("unknown")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}

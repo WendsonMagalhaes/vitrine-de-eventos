@@ -1,0 +1,145 @@
+/* ===== Formulários: inputs, selects, textarea, switch, modal =====
+   Carregado depois de admin.css. Não altera cores nem layout geral, só os controles. */
+
+/* corrige declarações "font:… inherit" do admin.css (inválidas, o navegador as ignorava) */
+.btn,.chip{font-family:inherit}
+.btn{font-size:13px;font-weight:700;line-height:1.2}
+.btn.pri{font-size:14px}
+.chip{font-size:13px;font-weight:600;line-height:1.2}.chip.on{font-weight:700}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+
+/* campos de texto e select com a mesma altura, borda e foco */
+input,select,textarea{width:100%;height:46px;padding:0 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;line-height:1.2;transition:border-color .15s,box-shadow .15s}
+input::placeholder,textarea::placeholder{color:#B3AAB8}
+input:hover,select:hover,textarea:hover{border-color:#DDD3E8}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--on-brand);box-shadow:0 0 0 4px var(--soft)}
+input:disabled,select:disabled,textarea:disabled{opacity:.6;cursor:not-allowed;background:var(--soft)}
+input[type=checkbox],input[type=radio]{width:auto;height:auto;padding:0;accent-color:var(--on-brand)}
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+textarea{height:auto;min-height:104px;padding:12px 14px;line-height:1.5;resize:vertical}
+
+/* select: seta própria no lugar da seta nativa */
+select{-webkit-appearance:none;appearance:none;padding-right:42px;cursor:pointer;
+  background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238A8190' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center/16px}
+select:disabled{background:var(--soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238A8190' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center/16px}
+option{color:var(--ink);background:var(--surface)}
+
+/* barra de busca + filtros alinhadas */
+.search{height:46px}
+.search input,.search input:hover,.search input:focus{border:0;box-shadow:none;border-radius:0;background:transparent}
+.search:focus-within{border-color:var(--on-brand);box-shadow:0 0 0 4px var(--soft)}
+.toolbar{align-items:center}
+.toolbar .search{margin:0;flex:1;min-width:220px}
+.toolbar select{width:auto;min-width:210px;flex:none}
+.toolbar>input.grow{width:auto}
+td input,td select{height:40px}
+
+/* campos de formulário */
+.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13px}
+.field small{font-weight:400;font-size:12px;color:var(--mute)}
+.field-label{font-weight:600;font-size:13px;margin-bottom:6px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+@media(max-width:560px){.form-grid{grid-template-columns:1fr}}
+.form-note{background:var(--soft);border-radius:14px;padding:10px 12px;font-size:13px;color:var(--mute)}
+
+/* interruptor (substitui checkbox cru) */
+.switch{flex-direction:row;align-items:center;gap:12px;cursor:pointer;font-weight:600;font-size:14px}
+.switch input{-webkit-appearance:none;appearance:none;width:44px;height:26px;padding:0;border:0;border-radius:99px;background:#E4DCE8;position:relative;flex:none;cursor:pointer;box-shadow:none;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(58,51,64,.25);transition:transform .15s}
+.switch input:checked{background:var(--brand)}
+.switch input:checked::after{transform:translateX(18px);background:var(--on-brand)}
+.switch input:focus-visible{box-shadow:0 0 0 4px var(--soft)}
+.switch small{display:block;font-weight:400;font-size:12px;color:var(--mute)}
+
+/* modal */
+.modal-back{position:fixed;inset:0;background:rgba(58,51,64,.4);display:grid;place-items:center;padding:16px;z-index:40}
+.modal{background:var(--bg);border-radius:26px;width:min(620px,100%);max-height:calc(100vh - 32px);overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(58,51,64,.25)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.modal-head h2{margin:0}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;flex-wrap:wrap}
+.modal-body{display:flex;flex-direction:column;gap:16px}
+
+/* ícones de ação */
+.icon:hover{background:var(--soft)}
+.icon.danger:hover{background:var(--bad);color:var(--on-bad);border-color:var(--bad)}
+.icon:disabled{opacity:.4;cursor:not-allowed}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.head .sub{margin-bottom:0}
+
+/* seletor de categorias (chips) e de cor (amostras) */
+.chips.tight{margin:0}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:46px;height:46px;border-radius:14px;border:2px solid transparent;cursor:pointer;padding:0}
+.swatch[aria-pressed=true]{border-color:var(--on-brand);box-shadow:0 0 0 3px var(--soft)}
+.bn-lilac{background:linear-gradient(135deg,#E3CBEF,#F9D6DE)}
+.bn-mint{background:linear-gradient(135deg,#C3E6DA,#E3F2CF)}
+.bn-peach{background:linear-gradient(135deg,#F9DDBC,#FCEFD2)}
+.bn-sky{background:linear-gradient(135deg,#C9D9F4,#E4ECFB)}
+
+/* banners */
+.banners{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.bn{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.bn.off{opacity:.6}
+.bn-prev{height:130px;border-radius:16px;position:relative;padding:14px;display:flex;flex-direction:column;justify-content:flex-end;color:#3A3340;background-size:cover;background-position:center;overflow:hidden}
+.bn-prev.img{color:#fff}
+.bn-prev b{font-size:16px;line-height:1.25}.bn-prev small{opacity:.9}
+.bn-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 4px 2px}
+.bn-meta .actions{margin-left:auto}
+
+/* serviços dentro da gaveta */
+.item .svc-info{flex:1;min-width:140px}
+
+/* ===== Confirmação (substitui o confirm() do navegador) ===== */
+.confirm-back{z-index:60}
+.modal.confirm{width:min(420px,100%);text-align:center;padding:28px 24px 22px;animation:pop .14s ease-out}
+.confirm h2{font-size:20px;margin:0 0 8px}
+.confirm-msg{color:var(--mute);margin:0;white-space:pre-line}
+.confirm-icon{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;margin:0 auto 14px;background:var(--soft);color:var(--on-brand)}
+.confirm-icon.danger{background:var(--bad);color:var(--on-bad)}
+.confirm-icon.warn{background:var(--warn);color:var(--on-warn)}
+.confirm-actions{display:flex;gap:10px;margin-top:22px}
+.confirm-actions .btn{flex:1;justify-content:center;padding:12px 16px;font-size:14px}
+.btn.danger-solid{background:var(--on-bad);border-color:var(--on-bad);color:#fff}
+.btn.danger-solid:hover{background:#7A3029}
+.btn.danger-solid:focus-visible{outline-color:var(--on-bad)}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.modal.confirm{animation:none}}
+@media(max-width:420px){.confirm-actions{flex-direction:column-reverse}}
+
+/* ===== Avisos (toasts) no visual do painel ===== */
+[data-sonner-toast].vt-toast{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(58,51,64,.12);font-family:inherit;font-size:14px;padding:14px 16px;gap:10px}
+[data-sonner-toast].vt-toast [data-description]{color:var(--mute)}
+[data-sonner-toast].vt-success{background:var(--ok);border-color:var(--ok);color:var(--on-ok)}
+[data-sonner-toast].vt-error{background:var(--bad);border-color:var(--bad);color:var(--on-bad)}
+
+/* ===== Campo de senha com olho ===== */
+.pw{position:relative;display:block}
+.pw input{padding-right:52px}
+.pw input::-ms-reveal,.pw input::-ms-clear{display:none}
+.pw-btn{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:12px;background:transparent;color:var(--mute);display:grid;place-items:center;cursor:pointer}
+.pw-btn:hover{background:var(--soft);color:var(--on-brand)}
+.pw-btn[aria-pressed=true]{color:var(--on-brand)}
+.pw-btn:focus-visible{outline:2px solid var(--on-brand);outline-offset:0}
+
+/* celular: 16px evita o zoom automático do iPhone ao tocar no campo */
+@media(max-width:640px){input,select,textarea{font-size:16px}.login{padding:16px;align-items:start;padding-top:14vh}.box{padding:24px}}
+
+/* ===== Login centralizado =====
+   O admin.css dá "main{max-width:1180px;width:100%}" a qualquer <main>, o que deixava a tela de login
+   (um <main class="login">) com 1180px de largura, colada à esquerda. Aqui ela volta a ocupar a tela toda. */
+main.login{max-width:none;width:100%}
+
+/* Texto e ícone dos botões sempre centralizados (o .btn é inline-flex e, quando ocupa a largura toda, como no login, o texto ficava à esquerda) */
+.btn{justify-content:center;text-align:center}
+
+/* ===== Foto do serviço ===== */
+.svc-img{display:flex;flex-direction:column;gap:10px}
+.svc-img img{width:100%;max-height:220px;object-fit:cover;border-radius:16px;background:var(--soft);display:block}
+.svc-img-actions{display:flex;gap:8px;flex-wrap:wrap}
+.svc-img-add{width:100%;height:120px;border:2px dashed var(--brand);border-radius:16px;background:var(--soft);color:var(--on-brand);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.svc-img-add:hover{background:#ece4f6}
+.svc-img-add:disabled{opacity:.7;cursor:progress}
+.svc-thumb{width:56px;height:56px;border-radius:14px;object-fit:cover;background:var(--soft);flex:none}
+.svc-thumb.ph{display:grid;place-items:center;color:var(--on-brand)}
